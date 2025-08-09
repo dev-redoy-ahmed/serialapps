@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "explore": "node explore-db.js"
+    "explore": "node explore-db.js",
+    "diagnostics": "node diagnostics.js"
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",
