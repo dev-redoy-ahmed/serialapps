@@ -41,7 +41,7 @@ export default async function handler(req, res) {
             // Get episodes for specific serial
             const episodes = await collection
               .find({ serial_id })
-              .sort({ episode_number: 1, createdAt: -1 })
+              .sort({ episode_number: -1 })
               .toArray();
             return res.status(200).json({ 
               success: true, 
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
             // Get all episodes
             const episodes = await collection
               .find({})
-              .sort({ createdAt: -1 })
+              .sort({ release_date: -1 })
               .toArray();
             return res.status(200).json({ 
               success: true, 
@@ -68,21 +68,16 @@ export default async function handler(req, res) {
       case 'POST':
         try {
           const {
-            title,
-            description,
             video_url,
-            thumbnail,
-            duration,
             episode_number,
             release_date,
-            serial_id,
-            serial_title
+            serial_id
           } = req.body;
 
-          if (!title || !video_url || !serial_id) {
+          if (!video_url || !serial_id) {
             return res.status(400).json({ 
               success: false, 
-              message: 'Title, video URL, and serial ID are required' 
+              message: 'Video URL and serial ID are required' 
             });
           }
 
@@ -102,18 +97,10 @@ export default async function handler(req, res) {
 
           const newEpisode = {
             _id: `ep${Date.now()}${Math.floor(Math.random() * 1000)}`,
-            title,
-            description: description || '',
             video_url,
-            thumbnail: thumbnail || '',
-            duration: duration || '',
             episode_number: episode_number ? parseInt(episode_number) : null,
             release_date: release_date ? new Date(release_date) : new Date(),
-            serial_id,
-            serial_title: serial_title || '',
-            views: 0,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            serial_id
           };
 
           const result = await collection.insertOne(newEpisode);
@@ -141,15 +128,10 @@ export default async function handler(req, res) {
         try {
           const { id } = req.query;
           const {
-            title,
-            description,
             video_url,
-            thumbnail,
-            duration,
             episode_number,
             release_date,
-            serial_id,
-            serial_title
+            serial_id
           } = req.body;
 
           if (!id) {
@@ -159,10 +141,10 @@ export default async function handler(req, res) {
             });
           }
 
-          if (!title || !video_url) {
+          if (!video_url) {
             return res.status(400).json({ 
               success: false, 
-              message: 'Title and video URL are required' 
+              message: 'Video URL is required' 
             });
           }
 
@@ -182,18 +164,12 @@ export default async function handler(req, res) {
           }
 
           const updateData = {
-            title,
-            description: description || '',
             video_url,
-            thumbnail: thumbnail || '',
-            duration: duration || '',
             episode_number: episode_number ? parseInt(episode_number) : null,
-            release_date: release_date ? new Date(release_date) : new Date(),
-            updatedAt: new Date()
+            release_date: release_date ? new Date(release_date) : new Date()
           };
 
           if (serial_id) updateData.serial_id = serial_id;
-          if (serial_title) updateData.serial_title = serial_title;
 
           const result = await collection.updateOne(
             { _id: id },

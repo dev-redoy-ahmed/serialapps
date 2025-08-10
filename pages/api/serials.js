@@ -16,43 +16,14 @@ export default async function handler(req, res) {
         try {
           const serials = await collection.find({}).toArray();
           
-          // Get channel information for each serial
-          const channelsCollection = db.collection('channels');
-          const serialsWithChannels = await Promise.all(
-            serials.map(async (serial) => {
-              if (serial.channel_id) {
-                try {
-                  const channel = await channelsCollection.findOne({ 
-                    _id: serial.channel_id 
-                  });
-                  return { 
-                    ...serial, 
-                    channel,
-                    // Map database fields to frontend expected fields
-                    name: serial.title,
-                    channelId: serial.channel_id,
-                    imageUrl: serial.image
-                  };
-                } catch (error) {
-                  console.error('Error fetching channel for serial:', serial._id, error);
-                  return { 
-                    ...serial,
-                    name: serial.title,
-                    channelId: serial.channel_id,
-                    imageUrl: serial.image
-                  };
-                }
-              }
-              return { 
-                ...serial,
-                name: serial.title,
-                channelId: serial.channel_id,
-                imageUrl: serial.image
-              };
-            })
-          );
+          // Map database fields to frontend expected fields
+          const serialsWithMappedFields = serials.map(serial => ({
+            ...serial,
+            name: serial.title || serial.name,
+            image: serial.image || ''
+          }));
           
-          res.status(200).json({ success: true, data: serialsWithChannels });
+          res.status(200).json({ success: true, data: serialsWithMappedFields });
         } catch (error) {
           console.error('Error fetching serials:', error);
           res.status(500).json({ success: false, message: error.message });
@@ -61,72 +32,46 @@ export default async function handler(req, res) {
 
       case 'POST':
         try {
-          const { name, description, channelId, imageUrl, status = 'active' } = req.body;
+          const { name, image, is_active = true } = req.body;
           
-          if (!name || !channelId) {
-            return res.status(400).json({ success: false, message: 'Name and Channel ID are required' });
+          if (!name) {
+            return res.status(400).json({ success: false, message: 'Name is required' });
           }
 
           const newSerial = {
-            title: name, // Map to database field
-            description: description || '',
-            channel_id: channelId, // Map to database field
-            image: imageUrl || '', // Map to database field
-            status,
-            views: 0,
+            title: name,
+            image: image || '',
+            is_active,
             createdAt: new Date(),
             updatedAt: new Date()
           };
 
           const result = await collection.insertOne(newSerial);
-          
-          // Get the created serial with channel info
           const createdSerial = await collection.findOne({ _id: result.insertedId });
-          const channelsCollection = db.collection('channels');
-          let channel = null;
-          try {
-            channel = await channelsCollection.findOne({ 
-              _id: channelId 
-            });
-          } catch (error) {
-            console.error('Error fetching channel:', error);
-          }
           
-          res.status(201).json({ 
-            success: true, 
-            data: { 
-              ...createdSerial, 
-              channel,
-              name: createdSerial.title,
-              channelId: createdSerial.channel_id,
-              imageUrl: createdSerial.image
-            } 
-          });
+          res.status(201).json({ success: true, data: createdSerial });
         } catch (error) {
-          console.error('Error creating serial:', error);
           res.status(500).json({ success: false, message: error.message });
         }
         break;
 
       case 'PUT':
         try {
-          const { id, name, description, channelId, imageUrl, status } = req.body;
+          const { _id, name, image, is_active } = req.body;
           
-          if (!id || !name || !channelId) {
-            return res.status(400).json({ success: false, message: 'ID, Name and Channel ID are required' });
+          if (!_id || !name) {
+            return res.status(400).json({ success: false, message: 'ID and Name are required' });
           }
 
           const updateData = {
-            title: name, // Map to database field
-            description: description || '',
-            channel_id: channelId, // Map to database field
-            image: imageUrl || '', // Map to database field
-            status: status || 'active',
+            title: name,
+            image: image || '',
+            is_active: is_active !== undefined ? is_active : true,
             updatedAt: new Date()
           };
 
           const result = await collection.updateOne(
-            { _id: new ObjectId(id) },
+            { _id: new ObjectId(_id) },
             { $set: updateData }
           );
 
@@ -134,37 +79,16 @@ export default async function handler(req, res) {
             return res.status(404).json({ success: false, message: 'Serial not found' });
           }
 
-          // Get the updated serial with channel info
-          const updatedSerial = await collection.findOne({ _id: new ObjectId(id) });
-          const channelsCollection = db.collection('channels');
-          let channel = null;
-          try {
-            channel = await channelsCollection.findOne({ 
-              _id: channelId 
-            });
-          } catch (error) {
-            console.error('Error fetching channel:', error);
-          }
-          
-          res.status(200).json({ 
-            success: true, 
-            data: { 
-              ...updatedSerial, 
-              channel,
-              name: updatedSerial.title,
-              channelId: updatedSerial.channel_id,
-              imageUrl: updatedSerial.image
-            } 
-          });
+          const updatedSerial = await collection.findOne({ _id: new ObjectId(_id) });
+          res.status(200).json({ success: true, data: updatedSerial });
         } catch (error) {
-          console.error('Error updating serial:', error);
           res.status(500).json({ success: false, message: error.message });
         }
         break;
 
       case 'DELETE':
         try {
-          const { id } = req.body;
+          const { id } = req.query;
           
           if (!id) {
             return res.status(400).json({ success: false, message: 'Serial ID is required' });

@@ -22,12 +22,8 @@ export default function Episodes() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEpisode, setEditingEpisode] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    video_url: '',
-    thumbnail: '',
-    duration: '',
     episode_number: '',
+    video_url: '',
     release_date: ''
   });
 
@@ -82,8 +78,7 @@ export default function Episodes() {
     try {
       const episodeData = {
         ...formData,
-        serial_id: selectedSerial._id,
-        serial_title: selectedSerial.title
+        serial_id: selectedSerial._id
       };
 
       const url = editingEpisode ? `/api/episodes?id=${editingEpisode._id}` : '/api/episodes';
@@ -145,12 +140,8 @@ export default function Episodes() {
   const handleEdit = (episode) => {
     setEditingEpisode(episode);
     setFormData({
-      title: episode.title || '',
-      description: episode.description || '',
-      video_url: episode.video_url || '',
-      thumbnail: episode.thumbnail || '',
-      duration: episode.duration || '',
       episode_number: episode.episode_number || '',
+      video_url: episode.video_url || '',
       release_date: episode.release_date ? episode.release_date.split('T')[0] : ''
     });
     setIsFormOpen(true);
@@ -167,7 +158,8 @@ export default function Episodes() {
 
   // Filter episodes based on search
   const filteredEpisodes = episodes.filter(episode =>
-    episode.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    episode.episode_number?.toString().includes(searchTerm) ||
+    episode.video_url?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading && !selectedSerial) {
@@ -308,7 +300,17 @@ export default function Episodes() {
             Refresh
           </button>
           <button 
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => {
+              const maxEpisode = episodes.reduce((max, ep) => Math.max(max, ep.episode_number || 0), 0);
+              const nextNumber = maxEpisode + 1;
+              const today = new Date().toISOString().split('T')[0];
+              setFormData({
+                episode_number: nextNumber.toString(),
+                video_url: '',
+                release_date: today
+              });
+              setIsFormOpen(true);
+            }}
             className="btn-primary flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -361,19 +363,13 @@ export default function Episodes() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Episode
+                    Episode Number
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Duration
+                    Video URL
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Release Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Views
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -383,41 +379,14 @@ export default function Episodes() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEpisodes.map((episode) => (
                   <tr key={episode._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {episode.thumbnail ? (
-                          <img 
-                            src={episode.thumbnail} 
-                            alt={episode.title}
-                            className="h-10 w-10 rounded object-cover mr-3"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center mr-3">
-                            <Play className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                        <span className="text-sm font-medium text-gray-900">
-                          #{episode.episode_number || 'N/A'}
-                        </span>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      #{episode.episode_number || 'N/A'}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{episode.title}</div>
-                      <div className="text-sm text-gray-500 truncate max-w-xs">
-                        {episode.description}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {episode.duration || 'N/A'}
+                    <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">
+                      {episode.video_url || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {episode.release_date ? new Date(episode.release_date).toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Eye className="h-4 w-4 mr-1" />
-                        {episode.views || 0}
-                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
@@ -450,58 +419,18 @@ export default function Episodes() {
                 {editingEpisode ? 'Edit Episode' : 'Add New Episode'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Episode Number
-                    </label>
-                    <input
-                      type="number"
-                      className="input"
-                      value={formData.episode_number}
-                      onChange={(e) => setFormData({...formData, episode_number: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Duration
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 45:30"
-                      className="input"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title *
+                    Episode Number *
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     className="input"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    value={formData.episode_number}
+                    onChange={(e) => setFormData({...formData, episode_number: e.target.value})}
                     required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    className="input"
-                    rows="3"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Video URL *
@@ -514,19 +443,6 @@ export default function Episodes() {
                     required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Thumbnail URL
-                  </label>
-                  <input
-                    type="url"
-                    className="input"
-                    value={formData.thumbnail}
-                    onChange={(e) => setFormData({...formData, thumbnail: e.target.value})}
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Release Date
@@ -546,12 +462,8 @@ export default function Episodes() {
                       setIsFormOpen(false);
                       setEditingEpisode(null);
                       setFormData({
-                        title: '',
-                        description: '',
-                        video_url: '',
-                        thumbnail: '',
-                        duration: '',
                         episode_number: '',
+                        video_url: '',
                         release_date: ''
                       });
                     }}

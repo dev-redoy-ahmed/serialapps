@@ -5,21 +5,18 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p 3000 -H 0.0.0.0",
-    "start:server": "node server.js",
+    "start": "node server.js",
     "start:next": "next start",
     "lint": "next lint",
     "explore": "node explore-db.js",
     "diagnostics": "node diagnostics.js"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",
     "dotenv": "^17.2.1",
     "lucide-react": "^0.539.0",
     "mongodb": "^6.18.0",
+    "multer": "^2.0.2",
     "next": "^15.4.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
