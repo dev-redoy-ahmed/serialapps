@@ -201,92 +201,123 @@ export default function Serials() {
         </div>
       </div>
 
-      {/* Serials Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {serials.map((serial) => (
-          <div key={serial._id} className="card hover:shadow-lg transition-shadow">
-            {/* Serial Image */}
-            <div className="mb-4">
-              {serial.imageUrl ? (
-                <img
-                  src={serial.imageUrl}
-                  alt={serial.name}
-                  className="w-full h-48 object-cover rounded-lg"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div 
-                className={`w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center ${serial.imageUrl ? 'hidden' : 'flex'}`}
-              >
-                <ImageIcon className="w-12 h-12 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Serial Info */}
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{serial.name}</h3>
-              {serial.description && (
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{serial.description}</p>
-              )}
-              
-              {/* Channel Info */}
-              {serial.channel && (
-                <div className="flex items-center gap-2 mb-3 p-2 bg-gray-50 rounded-lg">
-                  {serial.channel.imageUrl ? (
-                    <img
-                      src={serial.channel.imageUrl}
-                      alt={serial.channel.name}
-                      className="w-8 h-8 object-cover rounded"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className={`w-8 h-8 bg-gray-200 rounded flex items-center justify-center ${serial.channel.imageUrl ? 'hidden' : 'flex'}`}
-                  >
-                    <Tv className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{serial.channel.name}</p>
-                    <p className="text-xs text-gray-500">Channel</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Status Badge */}
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                serial.status === 'active' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {serial.status}
-              </span>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleEdit(serial)}
-                className="flex-1 btn-secondary flex items-center justify-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(serial._id)}
-                className="flex-1 btn-danger flex items-center justify-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Serials Table */}
+      <div className="card">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Serial
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Channel
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {serials.map((serial) => (
+                <tr key={serial._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-12 w-12">
+                        {serial.imageUrl ? (
+                          <img
+                            src={serial.imageUrl}
+                            alt={serial.name}
+                            className="h-12 w-12 rounded-lg object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          className={`h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center ${serial.imageUrl ? 'hidden' : 'flex'}`}
+                        >
+                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{serial.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {serial.channel ? (
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-8 w-8">
+                          {serial.channel.imageUrl ? (
+                            <img
+                              src={serial.channel.imageUrl}
+                              alt={serial.channel.name}
+                              className="h-8 w-8 rounded object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className={`h-8 w-8 bg-gray-100 rounded flex items-center justify-center ${serial.channel.imageUrl ? 'hidden' : 'flex'}`}
+                          >
+                            <Tv className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-gray-900">{serial.channel.name}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-500">No channel</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-xs truncate">
+                      {serial.description || 'No description'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      serial.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {serial.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(serial)}
+                        className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(serial._id)}
+                        className="text-red-600 hover:text-red-900 flex items-center gap-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {serials.length === 0 && (
