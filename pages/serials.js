@@ -7,18 +7,25 @@ export default function Serials() {
   const [editingSerial, setEditingSerial] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [channels, setChannels] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     image: '',
+    channel_id: '',
     is_active: true
   });
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const serialsRes = await fetch('/api/serials');
+      const [serialsRes, channelsRes] = await Promise.all([
+        fetch('/api/serials'),
+        fetch('/api/channels')
+      ]);
       const serialsData = await serialsRes.json();
+      const channelsData = await channelsRes.json();
       if (serialsData.success) setSerials(serialsData.data);
+      if (channelsData.success) setChannels(channelsData.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -100,6 +107,7 @@ export default function Serials() {
     setFormData({
       name: serial.name || '',
       image: serial.image || '',
+      channel_id: serial.channel_id || '',
       is_active: serial.is_active !== undefined ? serial.is_active : true
     });
     setShowAddForm(true);
@@ -169,6 +177,20 @@ export default function Serials() {
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Channel</label>
+              <select
+                required
+                value={formData.channel_id}
+                onChange={(e) => setFormData({...formData, channel_id: e.target.value})}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              >
+                <option value="">Select Channel</option>
+                {channels.map(channel => (
+                  <option key={channel._id} value={channel._id}>{channel.name}</option>
+                ))}
+              </select>
             </div>
             
             <div>
@@ -240,6 +262,7 @@ export default function Serials() {
             <thead className="table-header">
               <tr>
                 <th className="table-header-cell">Name</th>
+                <th className="table-header-cell">Channel</th>
                 <th className="table-header-cell">Image</th>
                 <th className="table-header-cell">Status</th>
                 <th className="table-header-cell">Actions</th>
@@ -250,6 +273,9 @@ export default function Serials() {
                 <tr key={serial._id}>
                   <td className="table-cell">
                     <div className="font-medium">{serial.name}</div>
+                  </td>
+                  <td className="table-cell">
+                    {serial.channel_name || 'N/A'}
                   </td>
                   <td className="table-cell">
                     {serial.image && (

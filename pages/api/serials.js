@@ -14,9 +14,28 @@ export default async function handler(req, res) {
     switch (req.method) {
       case 'GET':
         try {
-          const serials = await collection.find({}).toArray();
+          const serials = await collection.aggregate([
+            { $lookup: {
+                from: 'channels',
+                localField: 'channel_id',
+                foreignField: '_id',
+                as: 'channel'
+              }
+            },
+            { $unwind: { path: '$channel', preserveNullAndEmptyArrays: true } },
+            { $project: {
+                _id: 1,
+                title: 1,
+                image: 1,
+                is_active: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                channel_id: 1,
+                channel_name: { $ifNull: ['$channel.name', null] }
+              }
+            }
+          ]).toArray();
           
-          // Map database fields to frontend expected fields
           const serialsWithMappedFields = serials.map(serial => ({
             ...serial,
             name: serial.title || serial.name,
@@ -32,7 +51,7 @@ export default async function handler(req, res) {
 
       case 'POST':
         try {
-          const { name, image, is_active = true } = req.body;
+          const { name, image, channel_id, is_active = true } = req.body;
           
           if (!name) {
             return res.status(400).json({ success: false, message: 'Name is required' });
@@ -41,6 +60,7 @@ export default async function handler(req, res) {
           const newSerial = {
             title: name,
             image: image || '',
+            channel_id: channel_id ? new ObjectId(channel_id) : null,
             is_active,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -57,7 +77,7 @@ export default async function handler(req, res) {
 
       case 'PUT':
         try {
-          const { _id, name, image, is_active } = req.body;
+          const { _id, name, image, channel_id, is_active } = req.body;
           
           if (!_id || !name) {
             return res.status(400).json({ success: false, message: 'ID and Name are required' });
@@ -66,6 +86,7 @@ export default async function handler(req, res) {
           const updateData = {
             title: name,
             image: image || '',
+            channel_id: channel_id ? new ObjectId(channel_id) : null,
             is_active: is_active !== undefined ? is_active : true,
             updatedAt: new Date()
           };
