@@ -39,6 +39,7 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+temp_uploads/
 
 # Optional npm cache directory
 .npm
@@ -86,6 +87,11 @@ temp/
 # TernJS port file
 .tern-port
 
-# Test files
-test-db.js
-explore-db.js
+# Database scripts and test files
+*.sql
+check-*.js
+clean-*.js
+diagnostics.js
+remove-*.js
+update-*.js
+test.png
